@@ -1,8 +1,8 @@
 declare const SITE_URL: string;
 
 figma.showUI(`<script>window.location.href = '${SITE_URL}'</script>`, {
-  width: 700,
-  height: 700,
+  width: 600,
+  height: 600,
 });
 
 figma.ui.onmessage = async (message, props) => {

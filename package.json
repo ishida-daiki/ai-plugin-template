@@ -14,21 +14,28 @@
   },
   "dependencies": {
     "@figma/plugin-typings": "*",
+    "@radix-ui/react-slot": "^1.1.0",
     "@types/node": "20.4.2",
     "@types/react": "18.2.15",
     "@types/react-dom": "18.2.7",
     "ai": "^2.1.20",
     "autoprefixer": "10.4.14",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.1",
     "esbuild": "^0.18.12",
     "eslint": "8.45.0",
     "eslint-config-next": "13.4.10",
+    "framer-motion": "^11.5.4",
+    "lucide-react": "^0.441.0",
     "next": "13.4.10",
     "openai-edge": "^1.2.0",
     "postcss": "8.4.26",
     "prettier": "^3.0.0",
     "react": "18.2.0",
     "react-dom": "18.2.0",
+    "tailwind-merge": "^2.5.2",
     "tailwindcss": "3.3.3",
+    "tailwindcss-animate": "^1.0.7",
     "typescript": "5.1.6",
     "zod": "^3.21.4"
   },
@@ -36,6 +43,6 @@
     "concurrently": "^8.2.0"
   },
   "config": {
-    "siteURL": "https://test-ai-plugin-template.vercel.app/"
+    "siteURL": "https://othello-jade-rho.vercel.app/"
   }
 }
