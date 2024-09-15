@@ -45,7 +45,7 @@ export function OthelloGameComponent() {
     const flippedCells = getFlippedCells(row, col, currentPlayer)
     if (flippedCells.length === 0) return
 
-    const newBoard = [...board.map(row => [...row])]
+    const newBoard = board.map(r => [...r])
     newBoard[row][col] = currentPlayer
     flippedCells.forEach(([r, c]) => {
       newBoard[r][c] = currentPlayer
@@ -54,7 +54,7 @@ export function OthelloGameComponent() {
     setBoard(newBoard)
     const nextPlayer = currentPlayer === 'black' ? 'white' : 'black'
     setCurrentPlayer(nextPlayer)
-    updateValidMoves(nextPlayer)
+    // {{ Removed: updateValidMoves(nextPlayer) }}
   }
 
   function getFlippedCells(row: number, col: number, player: Player): [number, number][] {
@@ -92,8 +92,11 @@ export function OthelloGameComponent() {
     const moves: [number, number][] = []
     for (let row = 0; row < BOARD_SIZE; row++) {
       for (let col = 0; col < BOARD_SIZE; col++) {
-        if (board[row][col] === null && getFlippedCells(row, col, player).length > 0) {
-          moves.push([row, col])
+        if (board[row][col] === null) {
+          const flipped = getFlippedCells(row, col, player)
+          if (flipped.length > 0) {
+            moves.push([row, col])
+          }
         }
       }
     }
@@ -107,7 +110,7 @@ export function OthelloGameComponent() {
   function handlePass(player: Player) {
     const nextPlayer = player === 'black' ? 'white' : 'black'
     setCurrentPlayer(nextPlayer)
-    updateValidMoves(nextPlayer)
+    // {{ Removed: updateValidMoves(nextPlayer) }}
   }
 
   useEffect(() => {
@@ -124,6 +127,12 @@ export function OthelloGameComponent() {
       setGameState('finished')
     }
   }, [board])
+
+  useEffect(() => {
+    if (gameState === 'playing') {
+      updateValidMoves(currentPlayer)
+    }
+  }, [board, currentPlayer])
 
   if (gameState === 'entry') {
     return (
@@ -195,6 +204,14 @@ export function OthelloGameComponent() {
                   className={`w-10 h-10 rounded-full ${cell === 'black' ? 'bg-black' : 'bg-white'}`}
                   initial={{ rotateY: 0 }}
                   animate={{ rotateY: 180 }}
+                  transition={{ duration: 0.5 }}
+                />
+              )}
+              {!cell && validMoves.some(([r, c]) => r === rowIndex && c === colIndex) && (
+                <motion.div
+                  className="w-4 h-4 rounded-full bg-yellow-500"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
                   transition={{ duration: 0.5 }}
                 />
               )}
