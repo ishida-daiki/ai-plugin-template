@@ -4,12 +4,38 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
 
 type CellState = 'black' | 'white' | null
 type Player = 'black' | 'white'
 type GameState = 'entry' | 'playing' | 'finished'
 
 const BOARD_SIZE = 8
+
+const themes = {
+  standard: {
+    board: "bg-green-900",
+    cell: "bg-green-700",
+    validMove: "bg-green-500",
+    blackPiece: "bg-black",
+    whitePiece: "bg-white",
+  },
+  // dark: {
+  //   board: "bg-gray-800",
+  //   cell: "bg-gray-600",
+  //   validMove: "bg-gray-400",
+  //   blackPiece: "bg-black",
+  //   whitePiece: "bg-white",
+  // },
+  // blue: {
+  //   board: "bg-blue-900",
+  //   cell: "bg-blue-500",
+  //   validMove: "bg-blue-500",
+  //   blackPiece: "bg-blue-800",
+  //   whitePiece: "bg-blue-200",
+  // },
+  // Add more themes as needed
+}
 
 export function OthelloGameComponent() {
   const [gameState, setGameState] = useState<GameState>('entry')
@@ -18,6 +44,17 @@ export function OthelloGameComponent() {
   const [currentPlayer, setCurrentPlayer] = useState<Player>('black')
   const [score, setScore] = useState({ black: 2, white: 2 })
   const [validMoves, setValidMoves] = useState<[number, number][]>([])
+  const [currentTheme, setCurrentTheme] = useState<keyof typeof themes>('standard')
+
+  const [flipSound, setFlipSound] = useState<HTMLAudioElement | null>(null)
+  const [invalidMoveSound, setInvalidMoveSound] = useState<HTMLAudioElement | null>(null)
+  const [backgroundMusic, setBackgroundMusic] = useState<HTMLAudioElement | null>(null)
+
+  useEffect(() => {
+    setFlipSound(new Audio('/sounds/527530__jerimee__objective-complete.wav'))
+    setInvalidMoveSound(new Audio('/sounds/invalid.mp3'))
+    setBackgroundMusic(new Audio('/sounds/background.mp3'))
+  }, [])
 
   function initializeBoard(): CellState[][] {
     const board = Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(null))
@@ -35,12 +72,17 @@ export function OthelloGameComponent() {
     if (players.black && players.white) {
       setGameState('playing')
       updateValidMoves('black')
+      // backgroundMusic.loop = true
+      // backgroundMusic.play()
     }
   }
 
   function handleCellClick(row: number, col: number) {
     if (gameState !== 'playing' || board[row][col] !== null) return
-    if (!validMoves.some(([r, c]) => r === row && c === col)) return
+    if (!validMoves.some(([r, c]) => r === row && c === col)) {
+      invalidMoveSound?.play()
+      return
+    }
 
     const flippedCells = getFlippedCells(row, col, currentPlayer)
     if (flippedCells.length === 0) return
@@ -54,7 +96,7 @@ export function OthelloGameComponent() {
     setBoard(newBoard)
     const nextPlayer = currentPlayer === 'black' ? 'white' : 'black'
     setCurrentPlayer(nextPlayer)
-    // {{ Removed: updateValidMoves(nextPlayer) }}
+    flipSound?.play()
   }
 
   function getFlippedCells(row: number, col: number, player: Player): [number, number][] {
@@ -110,7 +152,7 @@ export function OthelloGameComponent() {
   function handlePass(player: Player) {
     const nextPlayer = player === 'black' ? 'white' : 'black'
     setCurrentPlayer(nextPlayer)
-    // {{ Removed: updateValidMoves(nextPlayer) }}
+    updateValidMoves(nextPlayer)
   }
 
   useEffect(() => {
@@ -125,6 +167,8 @@ export function OthelloGameComponent() {
 
     if (newScore.black + newScore.white === BOARD_SIZE * BOARD_SIZE) {
       setGameState('finished')
+      // backgroundMusic.pause()
+      // backgroundMusic.currentTime = 0
     }
   }, [board])
 
@@ -177,6 +221,18 @@ export function OthelloGameComponent() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-green-800 p-4">
+      {/* <div className="mb-4">
+        <Select value={currentTheme} onValueChange={(value) => setCurrentTheme(value as keyof typeof themes)}>
+          <SelectTrigger>
+            <SelectValue placeholder="Select Theme" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="standard">Standard</SelectItem>
+            <SelectItem value="dark">Dark</SelectItem>
+            <SelectItem value="blue">Blue</SelectItem>
+          </SelectContent>
+        </Select>
+      </div> */}
       <div className="mb-4 text-white text-xl flex items-center">
         Current Player: 
         <span className="ml-2">
@@ -187,13 +243,13 @@ export function OthelloGameComponent() {
       <div className="mb-4 text-white text-xl">
         Score - {players.black}: {score.black} | {players.white}: {score.white}
       </div>
-      <div className="grid grid-cols-8 gap-1 bg-green-900 p-2 rounded-lg shadow-lg">
+      <div className={`${themes[currentTheme].board} grid grid-cols-8 gap-1 p-2 rounded-lg shadow-lg`}>
         {board.map((row, rowIndex) =>
           row.map((cell, colIndex) => (
             <motion.div
               key={`${rowIndex}-${colIndex}`}
-              className={`w-12 h-12 bg-green-700 flex items-center justify-center cursor-pointer ${
-                validMoves.some(([r, c]) => r === rowIndex && c === colIndex) ? 'bg-green-500' : ''
+              className={`w-12 h-12 ${themes[currentTheme].cell} flex items-center justify-center cursor-pointer ${
+                validMoves.some(([r, c]) => r === rowIndex && c === colIndex) ? themes[currentTheme].validMove : ''
               }`}
               onClick={() => handleCellClick(rowIndex, colIndex)}
               whileHover={{ scale: 1.1 }}
@@ -201,7 +257,7 @@ export function OthelloGameComponent() {
             >
               {cell && (
                 <motion.div
-                  className={`w-10 h-10 rounded-full ${cell === 'black' ? 'bg-black' : 'bg-white'}`}
+                  className={`w-10 h-10 rounded-full ${cell === 'black' ? themes[currentTheme].blackPiece : themes[currentTheme].whitePiece}`}
                   initial={{ rotateY: 0 }}
                   animate={{ rotateY: 180 }}
                   transition={{ duration: 0.5 }}
